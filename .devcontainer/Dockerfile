@@ -48,6 +48,13 @@ RUN yum install -y yum-utils zsh && \
     pip install ansible && \
     wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
 
+# Install lastest AWS CLI
+RUN yum remove awscli -y; \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \
+    unzip awscliv2.zip; \
+    sudo ./aws/install; \
+    rm -rf awscliv2.zip aws
+    
 USER 1001
 
 # Set default shell to zsh

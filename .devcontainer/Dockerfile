@@ -1,0 +1,57 @@
+FROM quay.io/devfile/universal-developer-image:ubi8-latest
+
+# Install 
+USER root
+# Don't include container-selinux and remove
+# directories used by yum that are just taking
+# up space.
+RUN dnf -y module enable container-tools:rhel8; dnf -y update; rpm --restore --quiet shadow-utils; \
+dnf -y install crun podman netavark fuse-overlayfs /etc/containers/storage.conf --exclude container-selinux; \
+rm -rf /var/cache/* /var/log/dnf* /var/log/yum.*
+
+RUN useradd podman; \
+echo podman:10000:5000 > /etc/subuid; \
+echo podman:10000:5000 > /etc/subgid;
+
+# Setup internal Podman to pass subscriptions down from host to internal container
+# https://issues.redhat.com/browse/RHEL-40706
+RUN printf '/run/secrets/etc-pki-entitlement:/run/secrets/etc-pki-entitlement\n/run/secrets/rhsm:/run/secrets/rhsm\n' > /etc/containers/mounts.conf
+
+VOLUME /var/lib/containers
+RUN mkdir -p /home/podman/.local/share/containers
+RUN mkdir -p /home/podman/.config
+RUN chown podman:podman -R /home/podman
+VOLUME /home/podman/.local/share/containers
+
+# https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/containers.conf
+#ADD containers.conf /etc/containers/containers.conf
+# https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/podman-containers.conf
+#ADD podman-containers.conf /home/podman/.config/containers/containers.conf
+
+# chmod containers.conf and adjust storage.conf to enable Fuse storage.
+#RUN chmod 644 /etc/containers/containers.conf; sed -i -e 's|^#mount_program|mount_program|g' -e '/additionalimage.*/a "/var/lib/shared",' -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' /etc/containers/storage.conf
+#RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/lib/shared/vfs-images /var/lib/shared/vfs-layers; touch /var/lib/shared/overlay-images/images.lock; touch /var/lib/shared/overlay-layers/layers.lock; touch /var/lib/shared/vfs-images/images.lock; touch /var/lib/shared/vfs-layers/layers.lock
+
+ENV _CONTAINERS_USERNS_CONFIGURED=""
+
+# Install Terraform-docs
+RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz; \
+    tar -xzf terraform-docs.tar.gz; \
+    chmod +x terraform-docs; \
+    mv terraform-docs /usr/local/bin/terraform-docs
+
+# Getting podman to run
+RUN mv /usr/bin/podman.orig /usr/bin/podman
+
+# Install Ansible and Oh-My-Zsh
+RUN yum install -y yum-utils zsh && \
+    pip install ansible && \
+    wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
+
+USER 1001
+
+# Set default shell to zsh
+ENV SHELL=/bin/zsh
+
+# Create workspace dir used by VSCode
+# RUN mkdir /opt/app-root/src/workspace/

@@ -1,0 +1,37 @@
+{
+    "build": {
+        "context": "..",
+        "dockerfile": "./Dockerfile"
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/opt/app-root/src/workspace/,type=bind",
+    "workspaceFolder": "/opt/app-root/src/workspace/",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "/opt/app-root/bin/python",
+                "python.formatting.autopep8Path": "/opt/app-root/bin/autopep8",
+                "python.linting.pylintPath": "/opt/app-root/bin/pylint",
+                "dockerPath": "/usr/bin/podman", // This is the path to the podman binary in the container (if you want to build a devcontainer with podman)
+                "podmanager.podmanPath": "/usr/bin/podman" // This is the path to the podman binary in the container
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.pylint",
+                "ms-python.autopep8",
+                "ms-azuretools.vscode-docker",
+                "hashicorp.terraform",
+                "redhat.ansible",
+                "mark-tucker.aws-cli-configure",
+                "GitHub.vscode-pull-request-github",
+                "dreamcatcher45.podmanager",
+                "eamodio.gitlens"
+            ]
+        }
+    },
+    // Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+    "remoteUser": "root",
+    "runArgs": [
+        "--privileged"
+    ]
+}

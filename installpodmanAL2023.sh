@@ -68,31 +68,31 @@ cd ${HOME}/rpmbuild
 rpmbuild -bb SPECS/containers-common.spec
 sudo dnf install -y RPMS/noarch/containers-common-1-82.amzn2023.noarch.rpm
 
-# # Create /etc/containers directory if it doesn't exist
-# sudo mkdir -p /etc/containers
+# Create /etc/containers directory if it doesn't exist
+sudo mkdir -p /etc/containers
 
-# # Create /etc/containers/policy.json
-# sudo tee /etc/containers/policy.json > /dev/null << 'EOF'
-# {
-#     "default": [
-#         {
-#             "type": "insecureAcceptAnything"
-#         }
-#     ],
-#     "transports": {
-#         "docker-daemon": {
-#             "": [
-#                 {
-#                     "type": "insecureAcceptAnything"
-#                 }
-#             ]
-#         }
-#     }
-# }
-# EOF
+# Create /etc/containers/policy.json
+sudo tee /etc/containers/policy.json > /dev/null << 'EOF'
+{
+    "default": [
+        {
+            "type": "insecureAcceptAnything"
+        }
+    ],
+    "transports": {
+        "docker-daemon": {
+            "": [
+                {
+                    "type": "insecureAcceptAnything"
+                }
+            ]
+        }
+    }
+}
+EOF
 
-# # Change permissions of the policy.json file
-# sudo chmod 777 /etc/containers/policy.json
+# Change permissions of the policy.json file
+sudo chmod 777 /etc/containers/policy.json
 
 # Run podman
 echo "=> Running podman..."

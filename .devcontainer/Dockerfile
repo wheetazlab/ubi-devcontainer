@@ -45,9 +45,18 @@ RUN mv /usr/bin/podman.orig /usr/bin/podman
 
 # Install Ansible and Oh-My-Zsh
 RUN yum install -y yum-utils zsh && \
-    pip install ansible && \
-    wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
-
+    pip install ansible
+    
+# Uses "jonathan. Uses some bundled plugins and installs some more from github
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
+-t jonathan \
+-p ansible \
+-p terraform \
+-p kubectl \
+-p helm \
+-p oc \
+-p https://github.com/zsh-users/zsh-autosuggestions \
+-p https://github.com/zsh-users/zsh-completions
 # Install lastest AWS CLI
 RUN yum remove awscli -y; \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \

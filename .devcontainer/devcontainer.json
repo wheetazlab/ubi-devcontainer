@@ -27,7 +27,8 @@
                 "dreamcatcher45.podmanager",
                 "eamodio.gitlens",
                 "jbockle.jbockle-format-files",
-                "mark-tucker.aws-cli-configure"
+                "mark-tucker.aws-cli-configure",
+                "NecatiARSLAN.aws-access-vscode-extension"
             ]
         }
     },

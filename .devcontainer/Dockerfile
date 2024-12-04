@@ -55,6 +55,8 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 -p kubectl \
 -p helm \
 -p oc \
+-p aws \
+-p podman \
 -p https://github.com/zsh-users/zsh-autosuggestions \
 -p https://github.com/zsh-users/zsh-completions
 

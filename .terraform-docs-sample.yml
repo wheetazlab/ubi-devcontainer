@@ -1,6 +1,5 @@
 formatter: markdown table
 recursive:
   enabled: true
-  path: '**/*.tf'
 output:
   file: README.md

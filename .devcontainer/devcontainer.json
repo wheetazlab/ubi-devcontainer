@@ -25,7 +25,9 @@
                 "mark-tucker.aws-cli-configure",
                 "GitHub.vscode-pull-request-github",
                 "dreamcatcher45.podmanager",
-                "eamodio.gitlens"
+                "eamodio.gitlens",
+                "jbockle.jbockle-format-files",
+                "mark-tucker.aws-cli-configure"
             ]
         }
     },

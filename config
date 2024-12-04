@@ -1,0 +1,13 @@
+[default]
+region = blah
+output = blah
+[profile FPL-MAS9-AFT]
+sso_session = FPL-MAS9-SSO-AFT
+sso_account_id = 046843792623
+sso_role_name = AWSAdministratorAccess
+region = us-east-1
+tcp_keepalive = true
+[sso-session FPL-MAS9-SSO-AFT]
+sso_start_url = https://d-90679b8d81.awsapps.com/start/#
+sso_region = us-east-1
+sso_registration_scopes = sso:account:access

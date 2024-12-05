@@ -44,7 +44,7 @@ RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terr
 RUN mv /usr/bin/podman.orig /usr/bin/podman
 
 # Install Ansible and Zsh
-RUN yum install -y yum-utils zsh && \
+RUN yum install -y yum-utils zsh iputils && \
     pip install ansible
     
 # Uses "jonathan. Uses some bundled plugins and installs some more from github

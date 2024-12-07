@@ -102,6 +102,41 @@ ENV KUBECONFIG=/home/user/.kube/config
 
 USER 0
 
+# Don't include container-selinux and remove
+# directories used by yum that are just taking
+# up space.
+RUN sudo yum -y module install container-tools; dnf -y update; rpm --restore --quiet shadow-utils; \
+    dnf -y install crun podman netavark fuse-overlayfs /etc/containers/storage.conf --exclude container-selinux; \
+    rm -rf /var/cache/* /var/log/dnf* /var/log/yum.*
+
+RUN useradd podman; \
+    echo podman:10000:5000 > /etc/subuid; \
+    echo podman:10000:5000 > /etc/subgid;
+
+# Setup internal Podman to pass subscriptions down from host to internal container
+# https://issues.redhat.com/browse/RHEL-40706
+RUN printf '/run/secrets/etc-pki-entitlement:/run/secrets/etc-pki-entitlement\n/run/secrets/rhsm:/run/secrets/rhsm\n' > /etc/containers/mounts.conf
+
+VOLUME /var/lib/containers
+RUN mkdir -p /home/podman/.local/share/containers
+RUN mkdir -p /home/podman/.config
+RUN chown podman:podman -R /home/podman
+VOLUME /home/podman/.local/share/containers
+
+# https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/containers.conf
+#ADD containers.conf /etc/containers/containers.conf
+# https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/podman-containers.conf
+#ADD podman-containers.conf /home/podman/.config/containers/containers.conf
+
+# chmod containers.conf and adjust storage.conf to enable Fuse storage.
+#RUN chmod 644 /etc/containers/containers.conf; sed -i -e 's|^#mount_program|mount_program|g' -e '/additionalimage.*/a "/var/lib/shared",' -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' /etc/containers/storage.conf
+#RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/lib/shared/vfs-images /var/lib/shared/vfs-layers; touch /var/lib/shared/overlay-images/images.lock; touch /var/lib/shared/overlay-layers/layers.lock; touch /var/lib/shared/vfs-images/images.lock; touch /var/lib/shared/vfs-layers/layers.lock
+
+ENV _CONTAINERS_USERNS_CONFIGURED=""
+
+# Getting podman to run
+RUN mv /usr/bin/podman.orig /usr/bin/podman
+
 # Required packages for AWT
 # RUN dnf install -y libXext libXrender libXtst libXi
 
@@ -420,6 +455,7 @@ EOF
 # RUN echo 'export SDKMAN_DIR="/home/tooling/.sdkman"' >> ${PROFILE_EXT}
 # RUN echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> ${PROFILE_EXT}
 
+USER 0
 # Install Ansible, Zsh and iputils
 RUN yum install -y yum-utils zsh iputils && \
     dnf install bind-utils -y && \
@@ -437,9 +473,18 @@ RUN yum install -y yum-utils zsh && \
     pip install ansible
 
 # Install locales package and generate the locale
-RUN apt-get update && apt-get install -y locales && \
-    locale-gen en_US.UTF-8 && \
-    rm -rf /var/cache/yum
+RUN dnf install -y glibc-langpack-en glibc-all-langpacks && \
+    dnf reinstall -y glibc-common && \
+    dnf clean all && \
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
+    localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 || true
+
+# Set environment variables for locale
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8 
+
+# Disable oh-my-zsh compfix verification
+ENV ZSH_DISABLE_COMPFIX=true
 
 # Uses "jonathan. Uses some bundled plugins and installs some more from github
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
@@ -474,14 +519,7 @@ COPY --chown=0:0 entrypoint.sh /
 USER 10001
 
 ENV SHELL=/bin/zsh
-# Install locales package and generate the locale
-RUN apt-get update && apt-get install -y locales && \
-    locale-gen en_US.UTF-8
 
-# Set environment variables for locale
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
 ENV HOME=/home/user
 
 

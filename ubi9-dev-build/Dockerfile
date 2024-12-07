@@ -1,8 +1,8 @@
-# This is my quay.io image.  You can create your own free quay.io account or ghcr.io account and push your image there.
-# I use Podman desktop to push the image to quay.io.  You can push to ghcr.io the Podman desktop.
+# This is my ghcr.io image.  You can create your own free quay.io account or ghcr.io account and push your image there.
+# I use Podman desktop to push the image to ghcr.io.  You can push to ghcr.io the Podman desktop.
 # you can use the podman extension in VS Code to build and push the image to quay.io or ghcr.io or run the following command in the terminal.
 # change directory into ubi9-dev-build
-# podman build -t quay.io/stephenwheet/ubi9-dev-image:latest .
+# "podman build -t ghcr.io/wheetazlab/ubi-devcontainer:latest ."  (but this will need to be your registry)
 
 # syntax=docker/dockerfile:1.3-labs
 
@@ -10,17 +10,14 @@
 FROM quay.io/devfile/base-developer-image:ubi9-latest
 LABEL maintainer="Red Hat, Inc."
 
-LABEL com.redhat.component="devfile-universal-container"
-LABEL name="devfile/universal-developer-image"
-LABEL version="ubi9"
+LABEL org.opencontainers.image.source=https://github.com/wheetazlab/ubi-devcontainer
+LABEL name="wheetazlab/ubi-devcontainer"
+LABEL version="latest"
 
 #label for EULA
 LABEL com.redhat.license_terms="https://www.redhat.com/en/about/red-hat-end-user-license-agreements#UBI"
 
 #labels for container catalog
-LABEL summary="devfile universal developer image"
-LABEL description="Image with developers tools. Languages SDK and runtimes included."
-LABEL io.k8s.display-name="devfile-developer-universal"
 LABEL io.openshift.expose-services=""
 
 USER 0

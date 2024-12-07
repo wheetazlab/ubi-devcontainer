@@ -1,4 +1,4 @@
-FROM quay.io/stephenwheet/ubi9-dev-image:latest
+FROM ghcr.io/wheetazlab/ubi-devcontainer:latest
 
 USER 10001
 

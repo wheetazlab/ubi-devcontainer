@@ -1,3 +1,9 @@
+# This is my quay.io image.  You can create your own free quay.io account or ghcr.io account and push your image there.
+# I use Podman desktop to push the image to quay.io.  You can push to ghcr.io the Podman desktop.
+# you can use the podman extension in VS Code to build and push the image to quay.io or ghcr.io or run the following command in the terminal.
+# change directory into ubi9-dev-build
+# podman build -t quay.io/stephenwheet/ubi9-dev-image:latest .
+
 # syntax=docker/dockerfile:1.3-labs
 
 # updateBaseImages.sh can't operate on SHA-based tags as they're not date-based or semver-sequential, and therefore cannot be ordered
@@ -199,7 +205,7 @@ RUN curl -L https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/sta
 ENV TKN_VERSION=1.14.0
 RUN curl -L https://mirror.openshift.com/pub/openshift-v4/clients/pipelines/${TKN_VERSION}/tkn-linux-amd64.tar.gz | tar -C /usr/local/bin -xz --no-same-owner \
     && chmod +x /usr/local/bin/tkn /usr/local/bin/opc /usr/local/bin/tkn-pac
- 
+
 RUN echo 'alias docker=podman' >> ${PROFILE_EXT}
 
 # Configure container engine
@@ -420,27 +426,32 @@ RUN yum install -y yum-utils zsh iputils && \
     dnf -y install bash-completion && \
     pip install ansible && \
     rm -rf /var/cache/yum
-    
+
 # Install Terraform-docs
 RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz; \
     tar -xzf terraform-docs.tar.gz; \
     chmod +x terraform-docs; \
     mv terraform-docs /usr/local/bin/terraform-docs
 
-    RUN yum install -y yum-utils zsh && \
+RUN yum install -y yum-utils zsh && \
     pip install ansible
+
+# Install locales package and generate the locale
+RUN apt-get update && apt-get install -y locales && \
+    locale-gen en_US.UTF-8 && \
+    rm -rf /var/cache/yum
 
 # Uses "jonathan. Uses some bundled plugins and installs some more from github
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
--t jonathan \
--p ansible \
--p terraform \
--p kubectl \
--p helm \
--p oc \
--p podman \
--p https://github.com/zsh-users/zsh-autosuggestions \
--p https://github.com/zsh-users/zsh-completions
+    -t jonathan \
+    -p ansible \
+    -p terraform \
+    -p kubectl \
+    -p helm \
+    -p oc \
+    -p podman \
+    -p https://github.com/zsh-users/zsh-autosuggestions \
+    -p https://github.com/zsh-users/zsh-completions
 
 # Install lastest AWS CLI
 RUN yum remove awscli -y; \
@@ -463,12 +474,14 @@ COPY --chown=0:0 entrypoint.sh /
 USER 10001
 
 ENV SHELL=/bin/zsh
-ENV ZSH_DISABLE_COMPFIX=true
-ENV LC_ALL=en_US.UTF-8
-ENV LANG=en_US.UTF-8
+# Install locales package and generate the locale
+RUN apt-get update && apt-get install -y locales && \
+    locale-gen en_US.UTF-8
+
+# Set environment variables for locale
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 ENV HOME=/home/user
 
 
-# This is my quay.io image.  You can create your own free quay.io account or ghcr.io account and push your image there.
-# I use Podman desktop to push the image to quay.io.  You can push to ghcr.io the Podman desktop.
-# quay.io/stephenwheet/ubi9-dev-image:latest

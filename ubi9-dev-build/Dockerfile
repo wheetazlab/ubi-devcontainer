@@ -366,53 +366,61 @@ cd -
 rm -rf "${TEMP_DIR}"
 EOF
 
-## skaffold
-RUN curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && \
-    install skaffold /usr/local/bin/
+# ## skaffold
+# RUN curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && \
+#     install skaffold /usr/local/bin/
 
-# e2fsprogs setup
-# Since e2fsprogs-static package has removed RHEL 8 distribution, it is not possible to install from the repository
-# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/considerations_in_adopting_rhel_8/index#removed-packages_changes-to-packages
-RUN <<EOF
-set -euf -o pipefail
-TEMP_DIR="$(mktemp -d)"
-cd "${TEMP_DIR}"
-E2FSPROGS_VERSION="1.46.5"
-E2FSPROGS_TGZ="e2fsprogs-${E2FSPROGS_VERSION}.tar.gz"
-E2FSPROGS_TGZ_URL="https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v${E2FSPROGS_VERSION}/${E2FSPROGS_TGZ}"
-E2FSPROGS_CHEKSUMS_URL="https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v${E2FSPROGS_VERSION}/sha256sums.asc"
-curl -sSLO "${E2FSPROGS_TGZ_URL}"
-curl -sSLO "${E2FSPROGS_CHEKSUMS_URL}"
-sha256sum --ignore-missing -c "sha256sums.asc" 2>&1 | grep OK
-tar -zxv --no-same-owner -f "${E2FSPROGS_TGZ}"
-cd "e2fsprogs-${E2FSPROGS_VERSION}"
-mkdir build
-cd build
-../configure --prefix=/usr --with-root-prefix="" --enable-elf-shlibs --disable-evms
-make
-make install
-make install-libs
-cd -
-rm -rf "${TEMP_DIR}"
-EOF
+# # e2fsprogs setup
+# # Since e2fsprogs-static package has removed RHEL 8 distribution, it is not possible to install from the repository
+# # https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/considerations_in_adopting_rhel_8/index#removed-packages_changes-to-packages
+# RUN <<EOF
+# set -euf -o pipefail
+# TEMP_DIR="$(mktemp -d)"
+# cd "${TEMP_DIR}"
+# E2FSPROGS_VERSION="1.46.5"
+# E2FSPROGS_TGZ="e2fsprogs-${E2FSPROGS_VERSION}.tar.gz"
+# E2FSPROGS_TGZ_URL="https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v${E2FSPROGS_VERSION}/${E2FSPROGS_TGZ}"
+# E2FSPROGS_CHEKSUMS_URL="https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/v${E2FSPROGS_VERSION}/sha256sums.asc"
+# curl -sSLO "${E2FSPROGS_TGZ_URL}"
+# curl -sSLO "${E2FSPROGS_CHEKSUMS_URL}"
+# sha256sum --ignore-missing -c "sha256sums.asc" 2>&1 | grep OK
+# tar -zxv --no-same-owner -f "${E2FSPROGS_TGZ}"
+# cd "e2fsprogs-${E2FSPROGS_VERSION}"
+# mkdir build
+# cd build
+# ../configure --prefix=/usr --with-root-prefix="" --enable-elf-shlibs --disable-evms
+# make
+# make install
+# make install-libs
+# cd -
+# rm -rf "${TEMP_DIR}"
+# EOF
 
 # Bash completions
-RUN dnf -y install bash-completion \
-    && dnf clean all \
-    && rm -rf /var/cache/yum
+# RUN dnf -y install bash-completion \
+#     && dnf clean all \
+#     && rm -rf /var/cache/yum
 
-RUN <<EOF
-oc completion bash > /usr/share/bash-completion/completions/oc
-tkn completion bash > /usr/share/bash-completion/completions/tkn 
-kubectl completion bash > /usr/share/bash-completion/completions/kubectl
-cat ${NVM_DIR}/bash_completion > /usr/share/bash-completion/completions/nvm
-EOF
+
+# RUN <<EOF
+# oc completion bash > /usr/share/bash-completion/completions/oc
+# tkn completion bash > /usr/share/bash-completion/completions/tkn 
+# kubectl completion bash > /usr/share/bash-completion/completions/kubectl
+# cat ${NVM_DIR}/bash_completion > /usr/share/bash-completion/completions/nvm
+# EOF
 
 ## Add sdkman's init script launcher to the end of ${PROFILE_EXT} since we are not adding it on sdkman install
 ## NOTE: all modifications to ${PROFILE_EXT} must happen BEFORE this step in order for sdkman to function correctly
 # RUN echo 'export SDKMAN_DIR="/home/tooling/.sdkman"' >> ${PROFILE_EXT}
 # RUN echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> ${PROFILE_EXT}
 
+# Install Ansible, Zsh and iputils
+RUN yum install -y yum-utils zsh iputils && \
+    dnf install bind-utils -y && \
+    dnf -y install bash-completion && \
+    pip install ansible && \
+    rm -rf /var/cache/yum
+    
 # Install Terraform-docs
 RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz; \
     tar -xzf terraform-docs.tar.gz; \
@@ -454,6 +462,13 @@ COPY --chown=0:0 entrypoint.sh /
 
 USER 10001
 
+ENV SHELL=/bin/zsh
+ENV ZSH_DISABLE_COMPFIX=true
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
 ENV HOME=/home/user
 
-# quay.io/stephenwheet/p1suploader
+
+# This is my quay.io image.  You can create your own free quay.io account or ghcr.io account and push your image there.
+# I use Podman desktop to push the image to quay.io.  You can push to ghcr.io the Podman desktop.
+# quay.io/stephenwheet/ubi9-dev-image:latest

@@ -6,12 +6,12 @@ USER root
 # directories used by yum that are just taking
 # up space.
 RUN dnf -y module enable container-tools:rhel8; dnf -y update; rpm --restore --quiet shadow-utils; \
-dnf -y install crun podman netavark fuse-overlayfs /etc/containers/storage.conf --exclude container-selinux; \
-rm -rf /var/cache/* /var/log/dnf* /var/log/yum.*
+    dnf -y install crun podman netavark fuse-overlayfs /etc/containers/storage.conf --exclude container-selinux; \
+    rm -rf /var/cache/* /var/log/dnf* /var/log/yum.*
 
 RUN useradd podman; \
-echo podman:10000:5000 > /etc/subuid; \
-echo podman:10000:5000 > /etc/subgid;
+    echo podman:10000:5000 > /etc/subuid; \
+    echo podman:10000:5000 > /etc/subgid;
 
 # Setup internal Podman to pass subscriptions down from host to internal container
 # https://issues.redhat.com/browse/RHEL-40706
@@ -45,20 +45,21 @@ RUN mv /usr/bin/podman.orig /usr/bin/podman
 
 # Install Ansible, Zsh and iputils
 RUN yum install -y yum-utils zsh iputils && \
+    dnf install bind-utils -y && \
     pip install ansible
-    
+
 # Uses "jonathan. Uses some bundled plugins and installs some more from github
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
--t jonathan \
--p ansible \
--p terraform \
--p kubectl \
--p helm \
--p oc \
--p aws \
--p podman \
--p https://github.com/zsh-users/zsh-autosuggestions \
--p https://github.com/zsh-users/zsh-completions
+    -t jonathan \
+    -p ansible \
+    -p terraform \
+    -p kubectl \
+    -p helm \
+    -p oc \
+    -p aws \
+    -p podman \
+    -p https://github.com/zsh-users/zsh-autosuggestions \
+    -p https://github.com/zsh-users/zsh-completions
 
 # Install lastest AWS CLI
 RUN yum remove awscli -y; \
@@ -66,7 +67,7 @@ RUN yum remove awscli -y; \
     unzip awscliv2.zip; \
     sudo ./aws/install; \
     rm -rf awscliv2.zip aws
-    
+
 USER 1001
 
 # Set default shell to zsh

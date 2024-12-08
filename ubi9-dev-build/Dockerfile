@@ -8,14 +8,11 @@
 
 # updateBaseImages.sh can't operate on SHA-based tags as they're not date-based or semver-sequential, and therefore cannot be ordered
 FROM quay.io/devfile/base-developer-image:ubi9-latest
-LABEL maintainer="Red Hat, Inc."
 
 LABEL org.opencontainers.image.source=https://github.com/wheetazlab/ubi-devcontainer
 LABEL name="wheetazlab/ubi-devcontainer"
 LABEL version="latest"
 
-#label for EULA
-LABEL com.redhat.license_terms="https://www.redhat.com/en/about/red-hat-end-user-license-agreements#UBI"
 
 #labels for container catalog
 LABEL io.openshift.expose-services=""
@@ -468,6 +465,12 @@ RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terr
 
 RUN yum install -y yum-utils zsh && \
     pip install ansible
+
+# Add Microsoft repository for PowerShell
+RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
+    dnf config-manager --add-repo https://packages.microsoft.com/yumrepos/microsoft-rhel9.0-prod && \
+    dnf install -y powershell && \
+    dnf clean all
 
 # Install locales package and generate the locale
 RUN dnf install -y glibc-langpack-en glibc-all-langpacks && \

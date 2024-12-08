@@ -23,6 +23,9 @@ USER 0
 ENV PROFILE_EXT=/etc/profile.d/udi_environment.sh
 RUN touch ${PROFILE_EXT} & chown 10001 ${PROFILE_EXT}
 
+# Disable subscription-manager plugin
+RUN dnf remove subscription-manager -y
+
 USER 10001
 
 # We install everything to /home/tooling/ as /home/user/ may get overriden, see github.com/eclipse/che/issues/22412

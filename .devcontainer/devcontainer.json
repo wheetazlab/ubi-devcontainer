@@ -1,4 +1,5 @@
 {
+    "name": "Fedora Dev Container",
     "build": {
         "context": "..",
         "dockerfile": "./Dockerfile"
@@ -12,7 +13,8 @@
                 "python.formatting.autopep8Path": "/opt/app-root/bin/autopep8",
                 "python.linting.pylintPath": "/opt/app-root/bin/pylint",
                 "dockerPath": "/usr/bin/podman", // This is the path to the podman binary in the container (if you want to build a devcontainer with podman)
-                "podmanager.podmanPath": "/usr/bin/podman" // This is the path to the podman binary in the container
+                "podmanager.podmanPath": "/usr/bin/podman", // This is the path to the podman binary in the container
+                "terminal.integrated.shell.linux": "/bin/zsh"
             },
             "extensions": [
                 "ms-python.python",
@@ -28,13 +30,45 @@
                 "eamodio.gitlens",
                 "jbockle.jbockle-format-files",
                 "mark-tucker.aws-cli-configure",
-                "NecatiARSLAN.aws-access-vscode-extension"
+                "NecatiARSLAN.aws-access-vscode-extension",
+                "ms-vscode.cpptools"
             ]
         }
     },
     // Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     //"remoteUser": "root",
     "runArgs": [
-        "--privileged"
-    ]
+        "--privileged",
+        "--tmpfs", "/tmp",
+        "--tmpfs", "/run",
+        "--tmpfs", "/run/lock",
+        "-v", "/sys/fs/cgroup:/sys/fs/cgroup:ro",
+        "--cap-add=SYS_ADMIN",
+        "--security-opt", "seccomp=unconfined",
+        "--security-opt", "apparmor=unconfined",
+        "--security-opt", "label=disable",
+        "--tmpfs", "/tmp:exec",
+        "--tmpfs", "/run:exec",
+        "--tmpfs", "/run/lock:exec",
+        "--tmpfs", "/sys/fs/cgroup:exec",
+        "--tmpfs", "/var/lib/docker:exec",
+        "--tmpfs", "/var/lib/containerd:exec",
+        "--tmpfs", "/var/lib/kubelet:exec",
+        "--tmpfs", "/var/lib/rkt:exec",
+        "--tmpfs", "/var/lib/containers:exec",
+        "--tmpfs", "/var/lib/podman:exec",
+        "--tmpfs", "/var/lib/crio:exec",
+        "--tmpfs", "/var/lib/etcd:exec",
+        "--tmpfs", "/var/lib/ceph:exec",
+        "--tmpfs", "/var/lib/glusterfs:exec",
+        "--tmpfs", "/var/lib/rook:exec",
+        "--tmpfs", "/var/lib/openstack:exec",
+        "--tmpfs", "/var/lib/kubernetes:exec",
+        "--tmpfs", "/var/lib/mesos:exec",
+        "--tmpfs", "/var/lib/nomad:exec",
+        "--tmpfs", "/var/lib/consul:exec",
+        "--tmpfs", "/var/lib/vault:exec"
+    ],
+    "remoteUser": "root",
+    "containerUser": "root"
 }

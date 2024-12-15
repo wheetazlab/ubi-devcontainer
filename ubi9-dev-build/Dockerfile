@@ -25,7 +25,22 @@ RUN dnf -y update && \
     python3-pip \
     awscli \
     openssl \
+    glibc-langpack-en \
+    glibc-common \
+    glibc-locale-source \
+    glibc-all-langpacks \
     && dnf -y clean all --enablerepo='*'
+
+# Download and install amazon-ssm-agent
+RUN curl -sSLo /tmp/amazon-ssm-agent.rpm https://github.com/aws/amazon-ssm-agent/releases/download/v3.1.1234.0/amazon-ssm-agent-3.1.1234.0-1.x86_64.rpm && \
+    dnf -y install /tmp/amazon-ssm-agent.rpm && \
+    rm -f /tmp/amazon-ssm-agent.rpm
+
+# Set locale environment variables and locale
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # Set Python 3.11 as the default Python version
 RUN alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
@@ -80,14 +95,6 @@ RUN curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux
     dnf -y install session-manager-plugin.rpm && \
     rm -f session-manager-plugin.rpm
 
-# Set locale
-RUN dnf -y install glibc-all-langpacks && \
-    dnf -y reinstall glibc-common && \
-    localedef -c -i en_US -f UTF-8 en_US.UTF-8
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US:en
-ENV LC_ALL=en_US.UTF-8
-
 # Install Zsh with plugins
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
     -t jonathan \
@@ -104,4 +111,16 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 ENTRYPOINT ["/usr/sbin/init"]
 
 # Ensure systemd is enabled and running
-RUN systemctl enable sshd
+RUN systemctl enable amazon-ssm-agent && \
+    systemctl enable ssm-session-worker.service && \
+    systemctl enable ssm-session-logger.service && \
+    systemctl enable ssm-session-cleaner.service && \
+    systemctl enable ssm-session-manager-plugin.service && \
+    systemctl enable ssm-session-worker@.service && \
+    systemctl enable ssm-session-logger@.service && \
+    systemctl enable ssm-session-cleaner@.service && \
+    systemctl enable ssm-session-manager-plugin@.service && \
+    systemctl enable ssm-session-worker.socket && \
+    systemctl enable ssm-session-logger.socket && \
+    systemctl enable ssm-session-cleaner.socket && \
+    systemctl enable ssm-session-manager-plugin.socket

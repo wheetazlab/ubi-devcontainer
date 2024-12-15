@@ -1,6 +1,6 @@
-FROM ghcr.io/wheetazlab/ubi-devcontainer:latest
+FROM ghcr.io/wheetazlab/ubi-devcontainer:fedora-41
 
-USER 10001
+USER USER
 
 # Set default shell to zsh
 ENV SHELL=/bin/zsh

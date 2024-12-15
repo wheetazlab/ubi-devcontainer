@@ -7,7 +7,9 @@
 # syntax=docker/dockerfile:1.3-labs
 
 # updateBaseImages.sh can't operate on SHA-based tags as they're not date-based or semver-sequential, and therefore cannot be ordered
-FROM quay.io/devfile/base-developer-image:ubi9-latest
+FROM fedora:latest
+
+RUN dnf install -y systemd
 
 LABEL org.opencontainers.image.source=https://github.com/wheetazlab/ubi-devcontainer
 LABEL name="wheetazlab/ubi-devcontainer"
@@ -15,21 +17,21 @@ LABEL version="latest"
 
 
 #labels for container catalog
-LABEL io.openshift.expose-services=""
+#LABEL io.openshift.expose-services=""
 
-USER 0
+USER USER
 
 # $PROFILE_EXT contains all additions made to the bash environment
-ENV PROFILE_EXT=/etc/profile.d/udi_environment.sh
-RUN touch ${PROFILE_EXT} & chown 10001 ${PROFILE_EXT}
+#ENV PROFILE_EXT=/etc/profile.d/udi_environment.sh
+#RUN touch ${PROFILE_EXT} & chown 10001 ${PROFILE_EXT}
 
 # Disable subscription-manager plugin
 RUN dnf remove subscription-manager -y
 
-USER 10001
+#USER 10001
 
 # We install everything to /home/tooling/ as /home/user/ may get overriden, see github.com/eclipse/che/issues/22412
-ENV HOME=/home/tooling
+# ENV HOME=/home/tooling
 
 # Java
 # RUN curl -fsSL "https://get.sdkman.io/?rcupdate=false" | bash \
@@ -106,33 +108,35 @@ RUN sudo yum -y module install container-tools; dnf -y update; rpm --restore --q
     dnf -y install crun podman netavark fuse-overlayfs /etc/containers/storage.conf --exclude container-selinux; \
     rm -rf /var/cache/* /var/log/dnf* /var/log/yum.*
 
-RUN useradd podman; \
-    echo podman:10000:5000 > /etc/subuid; \
-    echo podman:10000:5000 > /etc/subgid;
+RUN sudo dnf -y install podman
 
-# Setup internal Podman to pass subscriptions down from host to internal container
-# https://issues.redhat.com/browse/RHEL-40706
-RUN printf '/run/secrets/etc-pki-entitlement:/run/secrets/etc-pki-entitlement\n/run/secrets/rhsm:/run/secrets/rhsm\n' > /etc/containers/mounts.conf
+# RUN useradd podman; \
+#     echo podman:10000:5000 > /etc/subuid; \
+#     echo podman:10000:5000 > /etc/subgid;
 
-VOLUME /var/lib/containers
-RUN mkdir -p /home/podman/.local/share/containers
-RUN mkdir -p /home/podman/.config
-RUN chown podman:podman -R /home/podman
-VOLUME /home/podman/.local/share/containers
+# # Setup internal Podman to pass subscriptions down from host to internal container
+# # https://issues.redhat.com/browse/RHEL-40706
+# RUN printf '/run/secrets/etc-pki-entitlement:/run/secrets/etc-pki-entitlement\n/run/secrets/rhsm:/run/secrets/rhsm\n' > /etc/containers/mounts.conf
 
-# https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/containers.conf
-#ADD containers.conf /etc/containers/containers.conf
-# https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/podman-containers.conf
-#ADD podman-containers.conf /home/podman/.config/containers/containers.conf
+# VOLUME /var/lib/containers
+# RUN mkdir -p /home/podman/.local/share/containers
+# RUN mkdir -p /home/podman/.config
+# RUN chown podman:podman -R /home/podman
+# VOLUME /home/podman/.local/share/containers
 
-# chmod containers.conf and adjust storage.conf to enable Fuse storage.
-#RUN chmod 644 /etc/containers/containers.conf; sed -i -e 's|^#mount_program|mount_program|g' -e '/additionalimage.*/a "/var/lib/shared",' -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' /etc/containers/storage.conf
-#RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/lib/shared/vfs-images /var/lib/shared/vfs-layers; touch /var/lib/shared/overlay-images/images.lock; touch /var/lib/shared/overlay-layers/layers.lock; touch /var/lib/shared/vfs-images/images.lock; touch /var/lib/shared/vfs-layers/layers.lock
+# # https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/containers.conf
+# #ADD containers.conf /etc/containers/containers.conf
+# # https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/podman-containers.conf
+# #ADD podman-containers.conf /home/podman/.config/containers/containers.conf
 
-ENV _CONTAINERS_USERNS_CONFIGURED=""
+# # chmod containers.conf and adjust storage.conf to enable Fuse storage.
+# #RUN chmod 644 /etc/containers/containers.conf; sed -i -e 's|^#mount_program|mount_program|g' -e '/additionalimage.*/a "/var/lib/shared",' -e 's|^mountopt[[:space:]]*=.*$|mountopt = "nodev,fsync=0"|g' /etc/containers/storage.conf
+# #RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/lib/shared/vfs-images /var/lib/shared/vfs-layers; touch /var/lib/shared/overlay-images/images.lock; touch /var/lib/shared/overlay-layers/layers.lock; touch /var/lib/shared/vfs-images/images.lock; touch /var/lib/shared/vfs-layers/layers.lock
 
-# Getting podman to run
-RUN mv /usr/bin/podman.orig /usr/bin/podman
+# ENV _CONTAINERS_USERNS_CONFIGURED=""
+
+# # Getting podman to run
+# RUN mv /usr/bin/podman.orig /usr/bin/podman
 
 # Required packages for AWT
 # RUN dnf install -y libXext libXrender libXtst libXi
@@ -153,24 +157,25 @@ RUN mv /usr/bin/podman.orig /usr/bin/podman
 #     mv mill /usr/local/bin/
 
 # C/CPP
-RUN dnf -y install llvm-toolset gcc gcc-c++ clang clang-libs clang-tools-extra gdb
+RUN dnf -y install llvm gcc gcc-c++ clang clang-libs clang-tools-extra gdb
 
 # Go 1.18+    - installed to /usr/bin/go
 # gopls 0.10+ - installed to /home/tooling/go/bin/gopls and /home/tooling/go/pkg/mod/
-RUN dnf install -y go-toolset && \
-    GO111MODULE=on go install -v golang.org/x/tools/gopls@latest && \
-    chgrp -R 0 /home/tooling && chmod -R g=u /home/tooling
-ENV GOBIN="/home/tooling/go/bin/"
-ENV PATH="$GOBIN:$PATH"
+RUN dnf install -y golang-x-net-devel 
+# && \
+#     GO111MODULE=on go install -v golang.org/x/tools/gopls@latest && \
+#     chgrp -R 0 /home/tooling && chmod -R g=u /home/tooling
+# ENV GOBIN="/home/tooling/go/bin/"
+# ENV PATH="$GOBIN:$PATH"
 
 # Python
-RUN dnf -y install python3.11 python3.11-devel python3.11-setuptools python3.11-pip nss_wrapper
+RUN dnf -y install python3.11 python-pip nss_wrapper
 
-RUN cd /usr/bin \
-    && if [ ! -L python ]; then ln -s python3.11 python; fi \
-    && if [ ! -L pydoc ]; then ln -s pydoc3.11 pydoc; fi \
-    && if [ ! -L python-config ]; then ln -s python3.11-config python-config; fi \
-    && if [ ! -L pip ]; then ln -s pip-3.11 pip; fi
+# RUN cd /usr/bin \
+#     && if [ ! -L python ]; then ln -s python3.11 python; fi \
+#     && if [ ! -L pydoc ]; then ln -s pydoc3.11 pydoc; fi \
+#     && if [ ! -L python-config ]; then ln -s python3.11-config python-config; fi \
+#     && if [ ! -L pip ]; then ln -s pip-3.11 pip; fi
 
 RUN pip install pylint yq
 
@@ -215,16 +220,16 @@ ENV KAMEL_VERSION 2.2.0
 RUN curl -L https://github.com/apache/camel-k/releases/download/v${KAMEL_VERSION}/camel-k-client-${KAMEL_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xz --no-same-owner \
     && chmod +x /usr/local/bin/kamel
 
-# Config directories
-RUN mkdir -p /home/tooling/.m2 && \
-    mkdir -p /home/tooling/.gradle && \
-    mkdir -p /home/tooling/.config/pip && \
-    mkdir -p /home/tooling/.sbt/1.0 && \
-    mkdir -p /home/tooling/.cargo && \
-    mkdir -p /home/tooling/certs && \
-    mkdir -p /home/tooling/.composer && \
-    mkdir -p /home/tooling/.nuget && \
-    chgrp -R 0 /home/tooling && chmod -R g=u /home/tooling
+# # Config directories
+# RUN mkdir -p /home/tooling/.m2 && \
+#     mkdir -p /home/tooling/.gradle && \
+#     mkdir -p /home/tooling/.config/pip && \
+#     mkdir -p /home/tooling/.sbt/1.0 && \
+#     mkdir -p /home/tooling/.cargo && \
+#     mkdir -p /home/tooling/certs && \
+#     mkdir -p /home/tooling/.composer && \
+#     mkdir -p /home/tooling/.nuget && \
+#     chgrp -R 0 /home/tooling && chmod -R g=u /home/tooling
 
 # Cloud
 
@@ -238,10 +243,10 @@ ENV TKN_VERSION=1.14.0
 RUN curl -L https://mirror.openshift.com/pub/openshift-v4/clients/pipelines/${TKN_VERSION}/tkn-linux-amd64.tar.gz | tar -C /usr/local/bin -xz --no-same-owner \
     && chmod +x /usr/local/bin/tkn /usr/local/bin/opc /usr/local/bin/tkn-pac
 
-RUN echo 'alias docker=podman' >> ${PROFILE_EXT}
+RUN echo 'alias docker=podman'
 
 # Configure container engine
-COPY --chown=0:0 containers.conf /etc/containers/containers.conf
+COPY --chown=root:root containers.conf /etc/containers/containers.conf
 
 ENV K8S_VERSION=1.28
 ## kubectl
@@ -259,7 +264,7 @@ EOF2
 
 dnf install -y kubectl
 curl -sSL -o ~/.kubectl_aliases https://raw.githubusercontent.com/ahmetb/kubectl-alias/master/.kubectl_aliases
-echo '[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases' >> ${PROFILE_EXT}
+echo '[ -f ~/.kubectl_aliases ] && source ~/.kubectl_aliases'
 EOF
 
 ## shellcheck
@@ -279,41 +284,41 @@ cd -
 rm -rf "${TEMP_DIR}"
 EOF
 
-## krew
-RUN <<EOF
-set -euf -o pipefail
-TEMP_DIR="$(mktemp -d)"
-cd "${TEMP_DIR}"
-KREW_VERSION="0.4.2"
-KREW_ARCH="linux_amd64"
-KREW_TGZ="krew-${KREW_ARCH}.tar.gz"
-KREW_TGZ_URL="https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW_TGZ}"
-curl -sSLO "${KREW_TGZ_URL}"
-curl -sSLO "${KREW_TGZ_URL}.sha256"
+# ## krew
+# RUN <<EOF
+# set -euf -o pipefail
+# TEMP_DIR="$(mktemp -d)"
+# cd "${TEMP_DIR}"
+# KREW_VERSION="0.4.2"
+# KREW_ARCH="linux_amd64"
+# KREW_TGZ="krew-${KREW_ARCH}.tar.gz"
+# KREW_TGZ_URL="https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW_TGZ}"
+# curl -sSLO "${KREW_TGZ_URL}"
+# curl -sSLO "${KREW_TGZ_URL}.sha256"
 
-# File ${KREW_TGZ_URL}.sha256 has invalid format to be checked with sha256sum.
-# It needs to create a valid one.
-echo "$(cat ${KREW_TGZ}.sha256)  ${KREW_TGZ}" > "${KREW_TGZ}.sha256"
+# # File ${KREW_TGZ_URL}.sha256 has invalid format to be checked with sha256sum.
+# # It needs to create a valid one.
+# echo "$(cat ${KREW_TGZ}.sha256)  ${KREW_TGZ}" > "${KREW_TGZ}.sha256"
 
-sha256sum -c "${KREW_TGZ}.sha256" 2>&1 | grep OK
+# sha256sum -c "${KREW_TGZ}.sha256" 2>&1 | grep OK
 
-tar -zxv --no-same-owner -f "${KREW_TGZ}"
-./"krew-${KREW_ARCH}" install krew
-echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ${PROFILE_EXT}
-export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
-# kubens and kubectx
-kubectl krew install ns
-kubectl krew install ctx
-cd -
-rm -rf "${TEMP_DIR}"
-EOF
+# tar -zxv --no-same-owner -f "${KREW_TGZ}"
+# ./"krew-${KREW_ARCH}" install krew
+# echo 'export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"' >> ${PROFILE_EXT}
+# export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+# # kubens and kubectx
+# kubectl krew install ns
+# kubectl krew install ctx
+# cd -
+# rm -rf "${TEMP_DIR}"
+# EOF
 
 ## helm
 RUN <<EOF
 set -euf -o pipefail
 TEMP_DIR="$(mktemp -d)"
 cd "${TEMP_DIR}"
-HELM_VERSION="3.14.3"
+HELM_VERSION="3.16.3"
 HELM_ARCH="linux-amd64"
 HELM_TGZ="helm-v${HELM_VERSION}-${HELM_ARCH}.tar.gz"
 HELM_TGZ_URL="https://get.helm.sh/${HELM_TGZ}"
@@ -331,7 +336,7 @@ RUN <<EOF
 set -euf -o pipefail
 TEMP_DIR="$(mktemp -d)"
 cd "${TEMP_DIR}"
-KUSTOMIZE_VERSION="5.3.0"
+KUSTOMIZE_VERSION="5.5.0"
 KUSTOMIZE_ARCH="linux_amd64"
 KUSTOMIZE_TGZ="kustomize_v${KUSTOMIZE_VERSION}_${KUSTOMIZE_ARCH}.tar.gz"
 KUSTOMIZE_TGZ_URL="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/${KUSTOMIZE_TGZ}"
@@ -350,7 +355,7 @@ RUN <<EOF
 set -euf -o pipefail
 TEMP_DIR="$(mktemp -d)"
 cd "${TEMP_DIR}"
-TKN_VERSION="0.20.0"
+TKN_VERSION="0.39.0"
 TKN_ARCH="Linux_x86_64"
 TKN_TGZ="tkn_${TKN_VERSION}_${TKN_ARCH}.tar.gz"
 TKN_TGZ_URL="https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/${TKN_TGZ}"
@@ -385,11 +390,12 @@ rm -rf "${TEMP_DIR}"
 EOF
 
 ## terraform-cli
+RUN dnf install -y unzip
 RUN <<EOF
 set -euf -o pipefail
 TEMP_DIR="$(mktemp -d)"
 cd "${TEMP_DIR}"
-TF_VERSION="1.7.5"
+TF_VERSION="1.10.2"
 TF_ARCH="linux_amd64"
 TF_ZIP="terraform_${TF_VERSION}_${TF_ARCH}.zip"
 TF_ZIP_URL="https://releases.hashicorp.com/terraform/${TF_VERSION}/${TF_ZIP}"
@@ -452,7 +458,7 @@ EOF
 # RUN echo 'export SDKMAN_DIR="/home/tooling/.sdkman"' >> ${PROFILE_EXT}
 # RUN echo '[[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"' >> ${PROFILE_EXT}
 
-USER 0
+#USER 0
 # Install Ansible, Zsh and iputils
 RUN yum install -y yum-utils zsh iputils && \
     dnf install bind-utils -y && \
@@ -466,17 +472,19 @@ RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terr
     chmod +x terraform-docs; \
     mv terraform-docs /usr/local/bin/terraform-docs
 
-RUN yum install -y yum-utils zsh && \
-    pip install ansible
+RUN pip install ansible
+
+# Install stow package
+RUN dnf install -y stow
 
 # Add Microsoft repository for PowerShell
-RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
-    dnf config-manager --add-repo https://packages.microsoft.com/yumrepos/microsoft-rhel9.0-prod && \
-    dnf install -y powershell && \
-    dnf clean all
+# RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
+#     dnf config-manager --add-repo https://packages.microsoft.com/yumrepos/microsoft-rhel9.0-prod && \
+#     dnf install -y powershell && \
+#     dnf clean all
 
 # Install locales package and generate the locale
-RUN dnf install -y glibc-langpack-en glibc-all-langpacks && \
+RUN dnf install -y glibc-langpack-en glibc-all-langpacks git wget && \
     dnf reinstall -y glibc-common && \
     dnf clean all && \
     echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
@@ -508,8 +516,16 @@ RUN yum remove awscli -y; \
     sudo ./aws/install; \
     rm -rf awscliv2.zip aws
 
+# Install ssm-session-manager-plugin
+RUN curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"; \
+    yum install -y session-manager-plugin.rpm; \
+    rm -rf session-manager-plugin.rpm
+
+# Ensure target directory exists
+#RUN mkdir -p /home/user/
+
 # Create symbolic links from /home/tooling/ -> /home/user/
-RUN stow . -t /home/user/ -d /home/tooling/ --no-folding
+#RUN stow . -t /home/user/ -d /home/tooling/ --no-folding
 
 # Set permissions on /etc/passwd, /etc/group, /etc/pki and /home to allow arbitrary users to write
 RUN chgrp -R 0 /home && chmod -R g=u /etc/passwd /etc/group /home /etc/pki
@@ -517,9 +533,7 @@ RUN chgrp -R 0 /home && chmod -R g=u /etc/passwd /etc/group /home /etc/pki
 # cleanup dnf cache
 RUN dnf -y clean all --enablerepo='*'
 
-COPY --chown=0:0 entrypoint.sh /
-
-USER 10001
+COPY --chown=root:root entrypoint.sh /
 
 ENV SHELL=/bin/zsh
 

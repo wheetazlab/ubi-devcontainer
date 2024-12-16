@@ -35,6 +35,15 @@ RUN curl "https://s3.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazo
     dnf -y install amazon-ssm-agent.rpm && \
     rm -f amazon-ssm-agent.rpm
 
+# Install aws session-manager-plugin
+RUN curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm" && \
+    dnf -y install session-manager-plugin.rpm && \
+    rm -f session-manager-plugin.rpm
+
+# Install docker-systemctl-replacement
+RUN pip install docker-systemctl-replacement && \
+    cp /usr/local/bin/systemctl.py /usr/bin/systemctl
+
 # Set locale environment variables and locale
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
@@ -88,11 +97,6 @@ RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terr
     chmod +x terraform-docs && \
     mv terraform-docs /usr/local/bin/terraform-docs && \
     rm terraform-docs.tar.gz
-
-# Install session-manager-plugin
-RUN curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm" && \
-    dnf -y install session-manager-plugin.rpm && \
-    rm -f session-manager-plugin.rpm
 
 # Install Zsh with plugins
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \

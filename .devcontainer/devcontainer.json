@@ -1,4 +1,5 @@
 {
+    "name": "Fedora Dev Container",
     "build": {
         "context": "..",
         "dockerfile": "./Dockerfile"
@@ -12,7 +13,8 @@
                 "python.formatting.autopep8Path": "/opt/app-root/bin/autopep8",
                 "python.linting.pylintPath": "/opt/app-root/bin/pylint",
                 "dockerPath": "/usr/bin/podman", // This is the path to the podman binary in the container (if you want to build a devcontainer with podman)
-                "podmanager.podmanPath": "/usr/bin/podman" // This is the path to the podman binary in the container
+                "podmanager.podmanPath": "/usr/bin/podman", // This is the path to the podman binary in the container
+                "terminal.integrated.shell.linux": "/bin/zsh"
             },
             "extensions": [
                 "ms-python.python",
@@ -28,7 +30,8 @@
                 "eamodio.gitlens",
                 "jbockle.jbockle-format-files",
                 "mark-tucker.aws-cli-configure",
-                "NecatiARSLAN.aws-access-vscode-extension"
+                "NecatiARSLAN.aws-access-vscode-extension",
+                "ms-vscode.cpptools"
             ]
         }
     },
@@ -36,5 +39,7 @@
     //"remoteUser": "root",
     "runArgs": [
         "--privileged"
-    ]
+    ],
+    "remoteUser": "root",
+    "containerUser": "root"
 }

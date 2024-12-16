@@ -19,7 +19,6 @@ RUN dnf -y update && \
     make \
     gcc \
     jq \
-    systemd \
     podman \
     python3.11 \
     python3-pip \
@@ -31,10 +30,10 @@ RUN dnf -y update && \
     glibc-all-langpacks \
     && dnf -y clean all --enablerepo='*'
 
-# Download and install amazon-ssm-agent
-RUN curl -sSLo /tmp/amazon-ssm-agent.rpm https://github.com/aws/amazon-ssm-agent/releases/download/v3.1.1234.0/amazon-ssm-agent-3.1.1234.0-1.x86_64.rpm && \
-    dnf -y install /tmp/amazon-ssm-agent.rpm && \
-    rm -f /tmp/amazon-ssm-agent.rpm
+# Install amazon-ssm-agent using RPM
+RUN curl "https://s3.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm" -o "amazon-ssm-agent.rpm" && \
+    dnf -y install amazon-ssm-agent.rpm && \
+    rm -f amazon-ssm-agent.rpm
 
 # Set locale environment variables and locale
 ENV LANG=en_US.UTF-8
@@ -107,20 +106,4 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
     -p https://github.com/zsh-users/zsh-autosuggestions \
     -p https://github.com/zsh-users/zsh-completions
 
-# Set systemd as the default command
-ENTRYPOINT ["/usr/sbin/init"]
 
-# Ensure systemd is enabled and running
-RUN systemctl enable amazon-ssm-agent && \
-    systemctl enable ssm-session-worker.service && \
-    systemctl enable ssm-session-logger.service && \
-    systemctl enable ssm-session-cleaner.service && \
-    systemctl enable ssm-session-manager-plugin.service && \
-    systemctl enable ssm-session-worker@.service && \
-    systemctl enable ssm-session-logger@.service && \
-    systemctl enable ssm-session-cleaner@.service && \
-    systemctl enable ssm-session-manager-plugin@.service && \
-    systemctl enable ssm-session-worker.socket && \
-    systemctl enable ssm-session-logger.socket && \
-    systemctl enable ssm-session-cleaner.socket && \
-    systemctl enable ssm-session-manager-plugin.socket

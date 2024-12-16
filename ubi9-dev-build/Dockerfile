@@ -1,6 +1,10 @@
 # Use the latest Fedora image
 FROM fedora:latest
 
+LABEL org.opencontainers.image.source=https://github.com/wheetazlab/ubi-devcontainer
+LABEL name="wheetazlab/ubi-devcontainer"
+LABEL version="latest"
+
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL=/bin/zsh

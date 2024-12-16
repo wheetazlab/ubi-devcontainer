@@ -19,6 +19,8 @@ RUN dnf -y update && \
     make \
     gcc \
     jq \
+    ps \
+    nano \
     podman \
     python3.11 \
     python3-pip \

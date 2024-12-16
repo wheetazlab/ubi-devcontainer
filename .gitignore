@@ -1,0 +1,8 @@
+
+# .gitignore
+
+# Ignore nohup.out file
+nohup.out
+
+# Other files to ignore
+# ...existing code...

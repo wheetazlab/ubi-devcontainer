@@ -31,7 +31,10 @@
                 "jbockle.jbockle-format-files",
                 "mark-tucker.aws-cli-configure",
                 "NecatiARSLAN.aws-access-vscode-extension",
-                "ms-vscode.cpptools"
+                "ms-vscode.cpptools",
+                "ms-toolsai.jupyter", // Add Jupyter extension
+                "ms-vscode.powershell", // Add PowerShell extension
+                "ms-azuretools.vscode-azure" // Add Azure extension
             ]
         }
     },

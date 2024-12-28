@@ -36,6 +36,14 @@ RUN dnf -y update && \
     glibc-all-langpacks \
     && dnf -y clean all --enablerepo='*'
 
+# Install PowerShell 7.4
+RUN curl -L -o powershell.rpm https://github.com/PowerShell/PowerShell/releases/download/v7.4.0/powershell-7.4.0-1.rh.x86_64.rpm && \
+    dnf install -y ./powershell.rpm && \
+    rm -f powershell.rpm
+
+# Install the latest Az module for PowerShell
+RUN pwsh -Command "Install-Module -Name Az -AllowClobber -Force -Scope AllUsers"
+
 # Install amazon-ssm-agent using RPM
 RUN curl "https://s3.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm" -o "amazon-ssm-agent.rpm" && \
     dnf -y install amazon-ssm-agent.rpm && \
@@ -63,6 +71,9 @@ RUN alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
 
 # Install pylint and yq
 RUN pip install pylint yq
+
+# Install JupyterLab
+RUN pip install jupyterlab
 
 # Alias docker to podman
 RUN echo "alias docker=podman" >> /etc/profile.d/alias.sh && \

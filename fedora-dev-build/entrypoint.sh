@@ -23,4 +23,7 @@ mountpoint -q /home/user/; HOME_USER_MOUNTED=$?
 #     touch $STOW_COMPLETE
 # fi
 
+# Start JupyterLab
+# jupyter lab --ip=0.0.0.0 --no-browser --allow-root &
+
 exec "$@"

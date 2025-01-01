@@ -34,6 +34,7 @@ RUN dnf -y update && \
     glibc-common \
     glibc-locale-source \
     glibc-all-langpacks \
+    sshpass \
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4

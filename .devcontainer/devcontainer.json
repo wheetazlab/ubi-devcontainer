@@ -32,9 +32,10 @@
                 "mark-tucker.aws-cli-configure",
                 "NecatiARSLAN.aws-access-vscode-extension",
                 "ms-vscode.cpptools",
-                "ms-toolsai.jupyter", // Add Jupyter extension
-                "ms-vscode.powershell", // Add PowerShell extension
-                "ms-azuretools.vscode-azure" // Add Azure extension
+                "ms-toolsai.jupyter",
+                "ms-vscode.powershell",
+                "ms-azuretools.vscode-azure",
+                "dhoeric.ansible-vault"
             ]
         }
     },

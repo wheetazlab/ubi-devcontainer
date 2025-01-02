@@ -10,9 +10,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL=/bin/zsh
 ENV OC_VERSION=4.15
 
-# Update the system and install required dependencies
-RUN dnf -y update && \
-    dnf -y install \
+# Update the system
+RUN dnf -y update
+
+# Install required dependencies
+RUN dnf -y install --skip-unavailable \
     sudo \
     curl \
     wget \
@@ -35,23 +37,43 @@ RUN dnf -y update && \
     glibc-locale-source \
     glibc-all-langpacks \
     sshpass \
+    krb5-libs \
+    libicu \
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4
-RUN curl -L -o powershell.rpm https://github.com/PowerShell/PowerShell/releases/download/v7.4.0/powershell-7.4.0-1.rh.x86_64.rpm && \
-    dnf install -y ./powershell.rpm && \
-    rm -f powershell.rpm
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl -L -o powershell.rpm https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-1.rh.x86_64.rpm && \
+        dnf install -y ./powershell.rpm && \
+        rm -f powershell.rpm; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl -L -o powershell.tar.gz https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-arm64.tar.gz && \
+        tar -xzf powershell.tar.gz -C /usr/local/bin && \
+        chmod +x /usr/local/bin/pwsh && \
+        rm -f powershell.tar.gz; \
+    fi
 
 # Install the latest Az module for PowerShell
 RUN pwsh -Command "Install-Module -Name Az -AllowClobber -Force -Scope AllUsers"
 
 # Install amazon-ssm-agent using RPM
-RUN curl "https://s3.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm" -o "amazon-ssm-agent.rpm" && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl "https://s3.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm" -o "amazon-ssm-agent.rpm"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl "https://s3.amazonaws.com/amazon-ssm-us-east-1/latest/linux_arm64/amazon-ssm-agent.rpm" -o "amazon-ssm-agent.rpm"; \
+    fi && \
     dnf -y install amazon-ssm-agent.rpm && \
     rm -f amazon-ssm-agent.rpm
 
 # Install aws session-manager-plugin
-RUN curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm" && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_arm64/session-manager-plugin.rpm" -o "session-manager-plugin.rpm"; \
+    fi && \
     dnf -y install session-manager-plugin.rpm && \
     rm -f session-manager-plugin.rpm
 
@@ -89,7 +111,12 @@ RUN dnf install -y dnf-plugins-core && \
 RUN curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 # Install kubectl
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"; \
+    fi && \
     install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
     rm -f kubectl
 
@@ -97,7 +124,12 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
 RUN pip install ansible
 
 # Install Kustomize
-RUN curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.0.0/kustomize_v5.0.0_linux_amd64.tar.gz" | tar -xz -C /usr/local/bin && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.0.0/kustomize_v5.0.0_linux_amd64.tar.gz" | tar -xz -C /usr/local/bin; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.0.0/kustomize_v5.0.0_linux_arm64.tar.gz" | tar -xz -C /usr/local/bin; \
+    fi && \
     chmod +x /usr/local/bin/kustomize
 
 # Install Azure CLI
@@ -106,11 +138,21 @@ RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
     dnf -y install azure-cli
 
 # Install OpenShift `oc` CLI
-RUN curl -L https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable-${OC_VERSION}/openshift-client-linux.tar.gz | tar -C /usr/local/bin -xz --no-same-owner && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl -L https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable-${OC_VERSION}/openshift-client-linux.tar.gz | tar -C /usr/local/bin -xz --no-same-owner; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl -L https://mirror.openshift.com/pub/openshift-v4/aarch64/clients/ocp/stable-${OC_VERSION}/openshift-client-linux.tar.gz | tar -C /usr/local/bin -xz --no-same-owner; \
+    fi && \
     chmod +x /usr/local/bin/oc
 
 # Install terraform-docs
-RUN curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-arm64.tar.gz; \
+    fi && \
     tar -xzf terraform-docs.tar.gz && \
     chmod +x terraform-docs && \
     mv terraform-docs /usr/local/bin/terraform-docs && \
@@ -129,3 +171,5 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
     -p https://github.com/zsh-users/zsh-completions
 
 ENV SHELL=/bin/zsh
+
+RUN dnf -y clean all --enablerepo='*'

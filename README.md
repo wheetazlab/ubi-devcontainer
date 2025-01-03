@@ -20,7 +20,7 @@ or for multiarch
 
 ```sh
 podman manifest create ghcr.io/wheetazlab/ubi-devcontainer:latest
-podman build --platform linux/amd64,linux/arm64 --manifest ghcr.io/wheetazlab/ubi-devcontainer:latest .
+podman buildx build --platform linux/amd64,linux/arm64 --manifest ghcr.io/wheetazlab/ubi-devcontainer:latest .
 ```
 
 ## Pushing the Image to a Repository

@@ -16,6 +16,12 @@ To build the Docker image using Podman, navigate to the directory containing the
 podman build -t ghcr.io/wheetazlab/ubi-devcontainer:latest .
 ```
 
+or for multi arch
+
+```sh
+podman buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/wheetazlab/ubi-devcontainer:latest .
+```
+
 ## Pushing the Image to a Repository
 
 To push the built image to a container registry, use the following command:

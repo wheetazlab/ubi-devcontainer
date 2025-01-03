@@ -160,18 +160,16 @@ RUN ARCH=$(uname -m) && \
     rm terraform-docs.tar.gz
 
 # Install Zsh with plugins
-RUN curl -fsSL https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh -o /tmp/zsh-in-docker.sh && \
-    sh /tmp/zsh-in-docker.sh -- \
-        -t jonathan \
-        -p ansible \
-        -p terraform \
-        -p kubectl \
-        -p helm \
-        -p oc \
-        -p podman \
-        -p https://github.com/zsh-users/zsh-autosuggestions \
-        -p https://github.com/zsh-users/zsh-completions && \
-    rm /tmp/zsh-in-docker.sh
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
+    -t jonathan \
+    -p ansible \
+    -p terraform \
+    -p kubectl \
+    -p helm \
+    -p oc \
+    -p podman \
+    -p https://github.com/zsh-users/zsh-autosuggestions \
+    -p https://github.com/zsh-users/zsh-completions
 
 ENV SHELL=/bin/zsh
 

@@ -4,6 +4,7 @@ FROM fedora:latest
 LABEL org.opencontainers.image.source=https://github.com/wheetazlab/ubi-devcontainer
 LABEL name="wheetazlab/ubi-devcontainer"
 LABEL version="latest"
+LABEL org.opencontainers.image.description="Devcontainer devops multi-arch image"
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,7 +15,7 @@ ENV OC_VERSION=4.15
 RUN dnf -y update
 
 # Install required dependencies
-RUN dnf -y install --skip-unavailable \
+RUN dnf -y install \
     sudo \
     curl \
     wget \
@@ -159,16 +160,18 @@ RUN ARCH=$(uname -m) && \
     rm terraform-docs.tar.gz
 
 # Install Zsh with plugins
-RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
-    -t jonathan \
-    -p ansible \
-    -p terraform \
-    -p kubectl \
-    -p helm \
-    -p oc \
-    -p podman \
-    -p https://github.com/zsh-users/zsh-autosuggestions \
-    -p https://github.com/zsh-users/zsh-completions
+RUN for i in {1..5}; do \
+    sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
+        -t jonathan \
+        -p ansible \
+        -p terraform \
+        -p kubectl \
+        -p helm \
+        -p oc \
+        -p podman \
+        -p https://github.com/zsh-users/zsh-autosuggestions \
+        -p https://github.com/zsh-users/zsh-completions && break || sleep 15; \
+    done
 
 ENV SHELL=/bin/zsh
 

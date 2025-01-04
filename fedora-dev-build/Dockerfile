@@ -55,9 +55,6 @@ RUN ARCH=$(uname -m) && \
         rm -f powershell.tar.gz; \
     fi
 
-# Install the latest Az module for PowerShell
-#RUN pwsh -Command "Install-Module -Name Az -AllowClobber -Force -Scope AllUsers"
-
 # Install amazon-ssm-agent using RPM
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
@@ -122,7 +119,7 @@ RUN ARCH=$(uname -m) && \
     rm -f kubectl
 
 # Install Ansible
-#RUN pip install ansible
+RUN pip install ansible
 
 # Install Kustomize
 RUN ARCH=$(uname -m) && \

@@ -31,6 +31,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
+            -f ./fedora-dev-build/Dockerfile \
             -t ghcr.io/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}:${{ github.event.release.tag_name }} \
             -t ghcr.io/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}:latest \
             --push .

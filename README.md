@@ -36,3 +36,20 @@ or for multiarch
 ```sh
 podman manifest push ghcr.io/wheetazlab/ubi-devcontainer:latest
 ```
+
+## GitHub Workflow for Building and Pushing Multi-Arch Image
+
+This repository includes a GitHub Actions workflow that automatically builds and pushes a multi-arch Docker image when a new release is created or the workflow is manually triggered.
+
+The workflow file is located at `.github/workflows/build-multi-arch-image-on-release.yml`.
+
+I have setup up arc-runners on my lab clusters (5 node RPI cm4 k3s cluster and a 4 node RK1 k3s cluster. The serve as my self-hosted runners and do multiarch builds). See the ansible folder for a sample playbook for creating Github Action Runner Controller for scale set and creating a ARC scale set that uses docker in docker for building.
+
+To trigger the workflow manually, navigate to the "Actions" tab in your GitHub repository, select the "Build Multi-Arch Image on Release" workflow, and click the "Run workflow" button.
+
+The workflow performs the following steps:
+1. Checks out the code.
+2. Sets up QEMU for multi-arch support.
+3. Sets up Docker Buildx.
+4. Logs in to the GitHub Container Registry.
+5. Builds and pushes the multi-arch Docker image to the GitHub Container Registry.

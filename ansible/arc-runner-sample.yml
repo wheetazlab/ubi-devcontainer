@@ -1,0 +1,33 @@
+- name: Install ARC
+  hosts: master
+  gather_facts: false
+  vars:
+    desired_state: "present"
+    github_config_url: "<your-github-repo/your-github-org>"
+    gpat: "<your-github-personal-access-token>"
+  tasks:
+    - name: Install ARC using Helm
+      kubernetes.core.helm:
+        name: arc
+        chart_ref: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
+        namespace: arc-systems
+        create_namespace: true
+        values:
+          metrics:
+            controllerManagerAddr: ":8080"
+            listenerAddr: ":8080"
+            listenerEndpoint: "/metrics"
+      release_state: "{{ desired_state }}"
+    - name: Install ARC Runner Repo using Helm
+      kubernetes.core.helm:
+        name: arc-runner-repo
+        chart_ref: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+        namespace: arc-runners
+        create_namespace: true
+        values:
+          githubConfigUrl: "{{ github_config_url }}"
+          githubConfigSecret:
+            github_token: "{{ gpat }}"
+          containerMode:
+            type: "dind"
+      release_state: "{{ desired_state }}"

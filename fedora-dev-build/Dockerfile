@@ -119,7 +119,7 @@ RUN ARCH=$(uname -m) && \
     rm -f kubectl
 
 # Install Ansible
-RUN pip install ansible
+RUN pip install ansible openshift pyyaml kubernetes
 
 # Install Kustomize
 RUN ARCH=$(uname -m) && \

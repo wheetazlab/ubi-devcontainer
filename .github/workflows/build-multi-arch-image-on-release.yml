@@ -29,6 +29,7 @@ jobs:
 
       - name: Check secrets
         run: |
+          echo ${{ secrets.GHCR_IMAGE_NAME }}
           echo ${{ secrets.GHCR_TOKEN }}
           
       - name: Build and Push Multi-Arch Image

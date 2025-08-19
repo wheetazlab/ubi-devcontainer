@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.description="Devcontainer devops multi-arch image
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL=/bin/zsh
-ENV OC_VERSION=4.15
+ENV OC_VERSION=4.19
 
 # Update the system
 RUN dnf -y update
@@ -31,6 +31,7 @@ RUN dnf -y install \
     podman \
     python3.11 \
     python3-pip \
+    python3-boto3 \
     awscli \
     openssl \
     glibc-langpack-en \
@@ -40,6 +41,8 @@ RUN dnf -y install \
     sshpass \
     krb5-libs \
     libicu \
+    bind-utils \
+    nmap-ncat
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4
@@ -94,7 +97,7 @@ RUN alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
 RUN pip install pylint yq
 
 # Install JupyterLab
-RUN pip install jupyterlab
+# RUN pip install jupyterlab
 
 # Alias docker to podman
 RUN echo "alias docker=podman" >> /etc/profile.d/alias.sh && \

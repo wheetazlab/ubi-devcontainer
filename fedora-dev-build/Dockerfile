@@ -42,7 +42,7 @@ RUN dnf -y install \
     krb5-libs \
     libicu \
     bind-utils \
-    nmap-ncat
+    nmap-ncat \
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4

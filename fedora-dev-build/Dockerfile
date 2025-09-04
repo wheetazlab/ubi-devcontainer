@@ -106,7 +106,7 @@ RUN echo "alias docker=podman" >> /etc/profile.d/alias.sh && \
 # Install Terraform
 RUN dnf install -y dnf-plugins-core && \
     echo -e "[hashicorp]\nname=HashiCorp Stable - $basearch\nbaseurl=https://rpm.releases.hashicorp.com/fedora/41/\$basearch/stable\nenabled=1\ngpgcheck=1\ngpgkey=https://rpm.releases.hashicorp.com/gpg" > /etc/yum.repos.d/hashicorp.repo && \
-    dnf -y install terraform-1.10.5
+    dnf -y install terraform-1.11.4
 
 # Install Helm
 RUN curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash

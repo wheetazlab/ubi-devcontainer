@@ -1,9 +1,9 @@
 name: Build Multi-Arch Image on Release
 
 on:
-  release:
-    types:
-      - created
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
 
 env:

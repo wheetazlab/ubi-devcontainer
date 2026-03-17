@@ -56,6 +56,7 @@ RUN dnf -y install \
     rsync \
     which \
     procps-ng \
+    nodejs-npm \
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4
@@ -171,6 +172,17 @@ RUN ARCH=$(uname -m) && \
     chmod +x terraform-docs && \
     mv terraform-docs /usr/local/bin/terraform-docs && \
     rm terraform-docs.tar.gz
+
+# Install GitHub CLI
+RUN dnf -y install 'dnf-command(config-manager)' && \
+    dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
+    dnf -y install gh
+
+# Install Homebrew
+RUN NONINTERACTIVE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /etc/profile.d/brew.sh && \
+    chmod +x /etc/profile.d/brew.sh
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
 # Install Zsh with plugins
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \

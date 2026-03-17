@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-server
+  namespace: code-server
+  labels:
+    app: code-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: code-server
+  template:
+    metadata:
+      labels:
+        app: code-server
+    spec:
+      containers:
+        - name: code-server
+          image: ghcr.io/wheetazlab/ubi-devcontainer:latest
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              if [ -f /root/.local/bin/code-server ]; then
+                /root/.local/bin/code-server --bind-addr 0.0.0.0:8080 --auth none
+              else
+                echo "code-server not installed, sleeping..."
+                sleep infinity
+              fi
+          env:
+            - name: SHELL
+              value: /bin/zsh
+            - name: HOME
+              value: /root
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+          volumeMounts:
+            - name: home
+              mountPath: /root
+      volumes:
+        - name: home
+          persistentVolumeClaim:
+            claimName: code-server-home

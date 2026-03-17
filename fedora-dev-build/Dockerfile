@@ -177,8 +177,8 @@ RUN ARCH=$(uname -m) && \
     mv terraform-docs /usr/local/bin/terraform-docs && \
     rm terraform-docs.tar.gz
 
-# Install Homebrew
-RUN NONINTERACTIVE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+# Install Homebrew (clone directly to avoid installer root check)
+RUN git clone --depth=1 https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew && \
     echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /etc/profile.d/brew.sh && \
     chmod +x /etc/profile.d/brew.sh
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"

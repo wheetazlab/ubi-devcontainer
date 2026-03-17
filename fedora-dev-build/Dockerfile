@@ -11,6 +11,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL=/bin/zsh
 ENV OC_VERSION=4.19
 
+# Add GitHub CLI repo
+RUN curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo -o /etc/yum.repos.d/gh-cli.repo
+
 # Update the system
 RUN dnf -y update
 
@@ -57,6 +60,7 @@ RUN dnf -y install \
     which \
     procps-ng \
     nodejs-npm \
+    gh \
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4
@@ -172,10 +176,6 @@ RUN ARCH=$(uname -m) && \
     chmod +x terraform-docs && \
     mv terraform-docs /usr/local/bin/terraform-docs && \
     rm terraform-docs.tar.gz
-
-# Install GitHub CLI
-RUN curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo -o /etc/yum.repos.d/gh-cli.repo && \
-    dnf -y install gh
 
 # Install Homebrew
 RUN NONINTERACTIVE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \

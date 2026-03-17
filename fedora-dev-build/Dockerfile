@@ -174,8 +174,7 @@ RUN ARCH=$(uname -m) && \
     rm terraform-docs.tar.gz
 
 # Install GitHub CLI
-RUN dnf -y install 'dnf-command(config-manager)' && \
-    dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
+RUN curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo -o /etc/yum.repos.d/gh-cli.repo && \
     dnf -y install gh
 
 # Install Homebrew

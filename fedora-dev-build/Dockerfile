@@ -26,7 +26,6 @@ RUN dnf -y install \
     make \
     gcc \
     jq \
-    ps \
     nano \
     podman \
     python3.11 \
@@ -43,6 +42,20 @@ RUN dnf -y install \
     libicu \
     bind-utils \
     nmap-ncat \
+    iputils \
+    traceroute \
+    nmap \
+    tcpdump \
+    iproute \
+    net-tools \
+    socat \
+    mtr \
+    tmux \
+    tree \
+    htop \
+    rsync \
+    which \
+    procps-ng \
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4

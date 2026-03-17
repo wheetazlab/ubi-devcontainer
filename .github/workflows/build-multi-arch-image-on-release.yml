@@ -6,32 +6,117 @@ on:
       - created
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+
 jobs:
   build:
-    runs-on: arc-runner-repo-rk1
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
 
-      - name: Set up QEMU
-        run: |
-          docker run --rm --privileged alekitto/qemu-user-static --reset -p yes
+    steps:
+      - name: Prepare platform tag-safe name
+        run: echo "PLATFORM_PAIR=$(echo ${{ matrix.platform }} | sed 's|/|-|g')" >> $GITHUB_ENV
+
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
-          
-      - name: Build and Push Multi-Arch Image
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./fedora-dev-build/Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ env.PLATFORM_PAIR }}
+
+      - name: Export digest
         run: |
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            -f ./fedora-dev-build/Dockerfile \
-            -t ghcr.io/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}:${{ github.event.release.tag_name }} \
-            -t ghcr.io/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}:latest \
-            --push .
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-24.04
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Download build digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        working-directory: /tmp/digests
+        run: |
+          mapfile -t tags < <(jq -r '.tags[] | "-t", .' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          mapfile -t annotations < <(jq -r '.annotations[] | "--annotation", ("index:" + ltrimstr("manifest:"))' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          mapfile -t digests < <(printf '${{ env.REGISTRY }}/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}@sha256:%s\n' *)
+          docker buildx imagetools create "${tags[@]}" "${annotations[@]}" "${digests[@]}"
+
+      - name: Inspect manifest
+        run: |
+          docker buildx imagetools inspect \
+            ${{ env.REGISTRY }}/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}:latest

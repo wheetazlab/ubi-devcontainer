@@ -61,6 +61,7 @@ RUN dnf -y install \
     procps-ng \
     nodejs-npm \
     gh \
+    patch \
     && dnf -y clean all --enablerepo='*'
 
 # Install PowerShell 7.4

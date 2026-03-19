@@ -137,7 +137,7 @@ jobs:
             echo "terraform:      $(terraform version 2>/dev/null | head -1 | awk "{print \$2}")"
             echo "terraform-docs: $(terraform-docs --version 2>/dev/null | grep -oP "v\d+\.\d+\.\d+")"
             echo "helm:           $(helm version --short 2>/dev/null | cut -d+ -f1)"
-            echo "kubectl:        $(kubectl version --client 2>/dev/null | grep -oP "v\d+\.\d+\.\d+")"
+            echo "kubectl:        $(kubectl version --client --output=yaml 2>/dev/null | grep gitVersion | head -1 | grep -oP "v\d+\.\d+\.\d+")"
             echo "ansible:        $(ansible --version 2>/dev/null | head -1 | grep -oP "\d+\.\d+\.\d+")"
             echo "kustomize:      $(kustomize version 2>/dev/null)"
             echo "azure-cli:      $(az --version 2>/dev/null | head -1 | awk "{print \$2}")"

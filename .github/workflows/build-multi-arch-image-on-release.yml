@@ -126,6 +126,48 @@ jobs:
           docker buildx imagetools inspect \
             ${{ env.REGISTRY }}/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}:latest
 
+      - name: Generate release notes
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ secrets.GHCR_USERNAME }}/${{ secrets.GHCR_IMAGE_NAME }}:latest"
+          docker pull "$IMAGE"
+
+          TOOLS=$(docker run --rm "$IMAGE" bash -c '
+            set +e
+            kubectl version --client 2>/dev/null | head -1
+            helm version --short 2>/dev/null
+            terraform version 2>/dev/null | head -1
+            az --version 2>/dev/null | head -1
+            oc version --client 2>/dev/null | head -1
+            ansible --version 2>/dev/null | head -1
+            gh --version 2>/dev/null | head -1
+            pwsh --version 2>/dev/null
+            kustomize version 2>/dev/null
+            python --version 2>/dev/null
+            node --version 2>/dev/null
+            terraform-docs --version 2>/dev/null
+            exit 0
+          ' 2>&1 || true)
+
+          PKGS=$(docker run --rm "$IMAGE" rpm -qa --queryformat '%{NAME}\n' | sort -u || true)
+
+          {
+            echo "## 🛠️ Installed Tools"
+            echo ""
+            echo "\`\`\`"
+            echo "$TOOLS"
+            echo "\`\`\`"
+            echo ""
+            echo "## 📦 RPM Packages"
+            echo ""
+            echo "<details><summary>Click to expand full package list</summary>"
+            echo ""
+            while IFS= read -r pkg; do
+              echo "- \`$pkg\`"
+            done <<< "$PKGS"
+            echo ""
+            echo "</details>"
+          } > /tmp/release_notes.md
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -133,5 +175,5 @@ jobs:
         run: |
           gh release create "${{ github.ref_name }}" \
             --title "${{ github.ref_name }}" \
-            --generate-notes \
+            --notes-file /tmp/release_notes.md \
             --latest

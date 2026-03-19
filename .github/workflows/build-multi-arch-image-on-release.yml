@@ -133,18 +133,18 @@ jobs:
 
           TOOLS=$(docker run --rm "$IMAGE" bash -c '
             set +e
-            kubectl version --client 2>/dev/null | head -1
-            helm version --short 2>/dev/null
-            terraform version 2>/dev/null | head -1
-            az --version 2>/dev/null | head -1
-            oc version --client 2>/dev/null | head -1
-            ansible --version 2>/dev/null | head -1
-            gh --version 2>/dev/null | head -1
-            pwsh --version 2>/dev/null
-            kustomize version 2>/dev/null
-            python --version 2>/dev/null
-            node --version 2>/dev/null
-            terraform-docs --version 2>/dev/null
+            echo "kubectl:        $(kubectl version --client 2>/dev/null | grep -oP "v\d+\.\d+\.\d+")"
+            echo "helm:           $(helm version --short 2>/dev/null | cut -d+ -f1)"
+            echo "terraform:      $(terraform version 2>/dev/null | head -1 | awk "{print \$2}")"
+            echo "azure-cli:      $(az --version 2>/dev/null | head -1 | awk "{print \$2}")"
+            echo "oc:             $(oc version --client 2>/dev/null | awk "{print \$NF}" | head -1)"
+            echo "ansible:        $(ansible --version 2>/dev/null | head -1)"
+            echo "gh:             $(gh --version 2>/dev/null | head -1 | awk "{print \$3}")"
+            echo "pwsh:           $(pwsh --version 2>/dev/null)"
+            echo "kustomize:      $(kustomize version 2>/dev/null)"
+            echo "python:         $(python --version 2>/dev/null)"
+            echo "node:           $(node --version 2>/dev/null)"
+            echo "terraform-docs: $(terraform-docs --version 2>/dev/null | grep -oP "v\d+\.\d+\.\d+")"
             exit 0
           ' 2>&1 || true)
 

@@ -154,14 +154,13 @@ jobs:
             echo ""
             echo "Installed via \`dnf install\`:"
             echo ""
-            for pkg in sudo curl wget gnupg tar unzip git make gcc jq nano podman \
-                       python3.11 python3-pip python3-boto3 awscli openssl \
-                       glibc-langpack-en glibc-common glibc-locale-source glibc-all-langpacks \
-                       sshpass krb5-libs libicu bind-utils nmap-ncat iputils traceroute \
-                       nmap tcpdump iproute net-tools socat mtr tmux tree htop rsync \
-                       which procps-ng nodejs-npm gh patch; do
+            DNF_PKGS=$(sed -n '/^RUN dnf -y install/,/&& dnf -y clean/p' ./fedora-dev-build/Dockerfile \
+              | grep -v '^RUN\|&& dnf' \
+              | tr -d ' \t\\' \
+              | grep -v '^$')
+            while IFS= read -r pkg; do
               echo "- \`$pkg\`"
-            done
+            done <<< "$DNF_PKGS"
             echo ""
             echo "## 🛠️ Installed Tools"
             echo ""

@@ -3,7 +3,7 @@ name: Build Multi-Arch Image on Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
 
 env:
@@ -134,6 +134,9 @@ jobs:
           TOOLS=$(docker run --rm "$IMAGE" bash -c '
             set +e
             echo "pwsh:           $(pwsh --version 2>/dev/null | awk "{print \$2}")"
+            echo "python:         $(python --version 2>/dev/null | awk "{print \$2}")"
+            echo "pylint:         $(pylint --version 2>/dev/null | head -1 | awk "{print \$2}")"
+            echo "podman:             $(podman --version 2>/dev/null | awk "{print \$3}")"
             echo "terraform:      $(terraform version 2>/dev/null | head -1 | awk "{print \$2}")"
             echo "terraform-docs: $(terraform-docs --version 2>/dev/null | grep -oP "v\d+\.\d+\.\d+")"
             echo "helm:           $(helm version --short 2>/dev/null | cut -d+ -f1)"
@@ -141,8 +144,10 @@ jobs:
             echo "ansible:        $(ansible --version 2>/dev/null | head -1 | grep -oP "\d+\.\d+\.\d+")"
             echo "kustomize:      $(kustomize version 2>/dev/null)"
             echo "azure-cli:      $(az --version 2>/dev/null | head -1 | awk "{print \$2}")"
-            echo "oc:             $(oc version --client 2>/dev/null | awk "{print \$NF}" | head -1)"
-            echo "python:         $(python --version 2>/dev/null | awk "{print \$2}")"
+            echo "aws-cli:            $(aws --version 2>/dev/null | awk "{print \$1}" | cut -d/ -f2)"
+            echo "oc cli:             $(oc version --client 2>/dev/null | awk "{print \$NF}" | head -1)"
+            echo "amazon-ssm-agent:   $(amazon-ssm-agent --version 2>/dev/null | grep -oP "\d+\.\d+\.\d+\.\d+")"
+            echo "ssm-session-plugin: $(session-manager-plugin --version 2>/dev/null)"
             echo "yq:             $(yq --version 2>/dev/null | head -1)"
             echo "zsh:            $(zsh --version 2>/dev/null | awk "{print \$2}") (oh-my-zsh)"
             echo "brew:           $(brew --version 2>/dev/null | head -1 | awk "{print \$2}")"

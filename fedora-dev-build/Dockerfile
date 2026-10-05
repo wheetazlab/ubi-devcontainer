@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.description="Devcontainer devops multi-arch image
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV SHELL=/bin/zsh
-ENV OC_VERSION=4.19
+ENV OC_VERSION=4.22
 
 # Add GitHub CLI repo
 RUN curl -fsSL https://cli.github.com/packages/rpm/gh-cli.repo -o /etc/yum.repos.d/gh-cli.repo
@@ -64,14 +64,14 @@ RUN dnf -y install \
     patch \
     && dnf -y clean all --enablerepo='*'
 
-# Install PowerShell 7.4
+# Install PowerShell 7.6 (LTS)
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
-        curl -L -o powershell.rpm https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-1.rh.x86_64.rpm && \
+        curl -L -o powershell.rpm https://github.com/PowerShell/PowerShell/releases/download/v7.6.6/powershell-7.6.6-1.rh.x86_64.rpm && \
         dnf install -y ./powershell.rpm && \
         rm -f powershell.rpm; \
     elif [ "$ARCH" = "aarch64" ]; then \
-        curl -L -o powershell.tar.gz https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-arm64.tar.gz && \
+        curl -L -o powershell.tar.gz https://github.com/PowerShell/PowerShell/releases/download/v7.6.6/powershell-7.6.6-linux-arm64.tar.gz && \
         tar -xzf powershell.tar.gz -C /usr/local/bin && \
         chmod +x /usr/local/bin/pwsh && \
         rm -f powershell.tar.gz; \
@@ -124,8 +124,8 @@ RUN echo "alias docker=podman" >> /etc/profile.d/alias.sh && \
 
 # Install Terraform
 RUN dnf install -y dnf-plugins-core && \
-    echo -e "[hashicorp]\nname=HashiCorp Stable - $basearch\nbaseurl=https://rpm.releases.hashicorp.com/fedora/41/\$basearch/stable\nenabled=1\ngpgcheck=1\ngpgkey=https://rpm.releases.hashicorp.com/gpg" > /etc/yum.repos.d/hashicorp.repo && \
-    dnf -y install terraform-1.11.4
+    echo -e "[hashicorp]\nname=HashiCorp Stable - $basearch\nbaseurl=https://rpm.releases.hashicorp.com/RHEL/9/\$basearch/stable\nenabled=1\ngpgcheck=1\ngpgkey=https://rpm.releases.hashicorp.com/gpg" > /etc/yum.repos.d/hashicorp.repo && \
+    dnf -y install terraform-1.16.5
 
 # Install Helm 4.x (latest)
 RUN curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
@@ -146,9 +146,9 @@ RUN pip install ansible openshift pyyaml kubernetes
 # Install Kustomize
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
-        curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.0.0/kustomize_v5.0.0_linux_amd64.tar.gz" | tar -xz -C /usr/local/bin; \
+        curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.8.2/kustomize_v5.8.2_linux_amd64.tar.gz" | tar -xz -C /usr/local/bin; \
     elif [ "$ARCH" = "aarch64" ]; then \
-        curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.0.0/kustomize_v5.0.0_linux_arm64.tar.gz" | tar -xz -C /usr/local/bin; \
+        curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.8.2/kustomize_v5.8.2_linux_arm64.tar.gz" | tar -xz -C /usr/local/bin; \
     fi && \
     chmod +x /usr/local/bin/kustomize
 
@@ -156,6 +156,11 @@ RUN ARCH=$(uname -m) && \
 RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc && \
     echo -e "[azure-cli]\nname=Azure CLI\nbaseurl=https://packages.microsoft.com/yumrepos/azure-cli\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azure-cli.repo && \
     dnf -y install azure-cli
+
+# Install Azure DevOps extension (shared dir so any user can use it; no org/project needed at install)
+ENV AZURE_EXTENSION_DIR=/opt/az-extensions
+RUN az extension add --name azure-devops --yes && \
+    chmod -R a+rX /opt/az-extensions
 
 # Install OpenShift `oc` CLI
 RUN ARCH=$(uname -m) && \
@@ -169,9 +174,9 @@ RUN ARCH=$(uname -m) && \
 # Install terraform-docs
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
-        curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz; \
+        curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.24.0/terraform-docs-v0.24.0-linux-amd64.tar.gz; \
     elif [ "$ARCH" = "aarch64" ]; then \
-        curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-linux-arm64.tar.gz; \
+        curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.24.0/terraform-docs-v0.24.0-linux-arm64.tar.gz; \
     fi && \
     tar -xzf terraform-docs.tar.gz && \
     chmod +x terraform-docs && \

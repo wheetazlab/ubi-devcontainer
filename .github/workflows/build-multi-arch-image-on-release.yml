@@ -144,6 +144,7 @@ jobs:
             echo "ansible:        $(ansible --version 2>/dev/null | head -1 | grep -oP "\d+\.\d+\.\d+")"
             echo "kustomize:      $(kustomize version 2>/dev/null)"
             echo "azure-cli:      $(az --version 2>/dev/null | head -1 | awk "{print \$2}")"
+            echo "az devops ext: $(az extension show --name azure-devops --query version -o tsv 2>/dev/null)"
             echo "aws-cli:            $(aws --version 2>/dev/null | awk "{print \$1}" | cut -d/ -f2)"
             echo "oc cli:             $(oc version --client 2>/dev/null | awk "{print \$NF}" | head -1)"
             echo "amazon-ssm-agent:   $(amazon-ssm-agent --version 2>/dev/null | grep -oP "\d+\.\d+\.\d+\.\d+")"
